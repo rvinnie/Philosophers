@@ -17,6 +17,7 @@ typedef struct
 typedef struct
 {
 	t_philo			*s_philos;
+	pthread_mutex_t	*forks;
 	unsigned int	num_of_philos;
 	unsigned int	time_to_die;
 	unsigned int	time_to_eat;

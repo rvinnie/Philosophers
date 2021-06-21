@@ -3,20 +3,20 @@
 pthread_mutex_t mutex1;
 pthread_mutex_t mutex2;
 
-// void	print_state(t_philo s_philo, int status)
-// {
-// 	char *state;
+void	print_state(unsigned int num, char *state)
+{
+	// char *state;
 
-// 	if (status == 0)
-// 		state = "is thinking";
-// 	else if (status == 1)
-// 		state = "has taken a fork";
-// 	else if (status == 2)
-// 		state = "is eating";
-// 	else if (status == 3)
-// 		state = "is sleeping";
-// 	printf("%-16ld %d %s\n", get_cur_time(), s_philo.number, state);
-// }
+	// if (status == 0)
+	// 	state = "is thinking";
+	// else if (status == 1)
+	// 	state = "has taken a fork";
+	// else if (status == 2)
+	// 	state = "is eating";
+	// else if (status == 3)
+	// 	state = "is sleeping";
+	printf("%-16ld %u %s\n", get_cur_time(), num, state);
+}
 
 // void	*test_philo(void *structure)
 // {
@@ -62,7 +62,7 @@ int	check_argv(char *str_arg)
 	return (num_arg);
 }
 
-int	init_args(t_main *s_main, int argc, char *argv[])
+int	set_args(t_main *s_main, int argc, char *argv[])
 {
 	s_main->num_of_philos = check_argv(argv[1]);
 	s_main->time_to_die = check_argv(argv[2]);
@@ -89,21 +89,85 @@ int	init_philos(t_main *s_main)
 
 	s_philos = malloc(sizeof(t_philo) * s_main->num_of_philos);
 	if (!(s_philos))
-		return (-1);
+		return (put_error("error: failed to allocate memory\n"));
 	i = 0;
 	while (i < s_main->num_of_philos)
 	{
 		s_philos[i].philo_num = i + 1;
-		s_philos[i].left_fork = i + 1;
+		s_philos[i].left_fork = i;
 		if (i == s_main->num_of_philos - 1)
-			s_philos[i].right_fork = 1;
+			s_philos[i].right_fork = 0;
 		else
-			s_philos[i].right_fork = i + 2;
+			s_philos[i].right_fork = i + 1;
 		s_philos[i].eat_count = 0;
 		i++;
 	}
 	s_main->s_philos = s_philos;
 	return (0);
+}
+
+int	init_forks(t_main *s_main)
+{
+	pthread_mutex_t *forks;
+	int				i;
+
+	forks = malloc(sizeof(pthread_mutex_t) * s_main->num_of_philos);
+	if (!forks)
+		return (put_error("error: failed to allocate memory\n"));
+	i = 0;
+	while (i < s_main->num_of_philos)
+	{
+		if (pthread_mutex_init(&forks[i], NULL))
+			return (put_error("error: mutex is not initialized\n"));
+		i++;
+	}
+	s_main->forks = forks;
+	return (0);
+}
+
+void	*test_meal(void *s_philo)
+{
+	t_philo	philo;
+	philo = *(t_philo *)s_philo;
+
+	// while (1 == 1)
+	// {
+	// 	print_state(s_philo, 0);
+	// 	usleep(800000);
+	// 	pthread_mutex_lock(&s_philo.left);
+	// 	print_state(s_philo, philo.philo_num);
+	// 	pthread_mutex_lock(&s_philo.right);
+	// 	print_state(s_philo, philo.philo_num);
+	// 	print_state(s_philo, philo.philo_num);
+	// 	usleep(200000);
+	// 	pthread_mutex_unlock(&s_philo.left);
+	// 	pthread_mutex_unlock(&s_philo.right);
+	// 	print_state(s_philo, philo.philo_num);
+	// 	usleep(200000);
+	// }
+	
+}
+
+void	start_philos(t_main *s_main)
+{
+	void	*s_philo;
+	int	i;
+
+	i = 0;
+	while (i < s_main->num_of_philos)
+	{
+		s_philo = (void *)(&s_main->s_philos[i]);
+		if (pthread_create(s_main->s_philos[i].philo, NULL, test_meal, s_philo))
+			return (put_error("error: failed to create thread\n"));
+		i++;
+	}
+	// i = 0;
+	// while (i < s_main->num_of_philos)
+	// {
+	// 	if (pthread_join(s_main->s_philos[i].philo, NULL))
+	// 		return (put_error("error: failed to create thread\n"));
+	// 	i++;
+	// }
 }
 
 int main(int argc, char *argv[])
@@ -113,11 +177,12 @@ int main(int argc, char *argv[])
 
 	if (argc < 5 || argc > 6)
 		return (put_error("error: wrong number of arguments\n"));
-	if (init_args(&s_main, argc, argv) == -1)
+	if (set_args(&s_main, argc, argv) == -1)
 		return (put_error("error: wrong argument values\n"));
 	// printf("%d %d %d %d %d\n", s_main.num_of_philos, s_main.time_to_die, s_main.time_to_eat, s_main.time_to_sleep, s_main.num_must_eat);
-	if (init_philos(&s_main) == -1)
-		return (put_error("error: failed to allocate memory\n"));
+	if (init_philos(&s_main) || init_forks(&s_main))
+		return (1);
+	start_philos(&s_main);
 	// while (i < count)
 	// {
 	// 	init_philos(philos, i);
