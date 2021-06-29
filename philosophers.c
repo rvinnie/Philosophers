@@ -1,50 +1,5 @@
 #include "philosophers.h"
 
-pthread_mutex_t mutex1;
-pthread_mutex_t mutex2;
-
-void	print_state(unsigned int num, char *state)
-{
-	// char *state;
-
-	// if (status == 0)
-	// 	state = "is thinking";
-	// else if (status == 1)
-	// 	state = "has taken a fork";
-	// else if (status == 2)
-	// 	state = "is eating";
-	// else if (status == 3)
-	// 	state = "is sleeping";
-	printf("%-16ld %u %s\n", get_cur_time(), num, state);
-}
-
-// void	*test_philo(void *structure)
-// {
-// 	t_philo s_philo;
-// 	int flag = 1;
-
-// 	s_philo = *(t_philo *)structure;
-// 	s_philo.left = mutex1;
-// 	s_philo.right = mutex2;
-// 	while (flag)
-// 	{
-// 		print_state(s_philo, 0);
-// 		usleep(800000);
-// 		pthread_mutex_lock(&s_philo.left);
-// 		print_state(s_philo, 1);
-// 		pthread_mutex_lock(&s_philo.right);
-// 		print_state(s_philo, 1);
-// 		print_state(s_philo, 2);
-// 		usleep(200000);
-// 		pthread_mutex_unlock(&s_philo.left);
-// 		pthread_mutex_unlock(&s_philo.right);
-// 		print_state(s_philo, 3);
-// 		usleep(200000);
-// 	}
-// }
-
-
-
 int	check_argv(char *str_arg)
 {
 	unsigned int	num_arg;
@@ -62,14 +17,14 @@ int	check_argv(char *str_arg)
 	return (num_arg);
 }
 
-int	set_args(t_main *s_main, int argc, char *argv[])
+int	set_args(t_main *s_main, t_info *s_info, int argc, char *argv[])
 {
-	s_main->num_of_philos = check_argv(argv[1]);
-	s_main->time_to_die = check_argv(argv[2]);
-	s_main->time_to_eat = check_argv(argv[3]);
-	s_main->time_to_sleep = check_argv(argv[4]);
-	if (!s_main->num_of_philos || !s_main->time_to_die
-		|| !s_main->time_to_eat || !s_main->time_to_sleep)
+	s_info->num_of_philos = check_argv(argv[1]);
+	s_info->time_to_die = check_argv(argv[2]);
+	s_info->time_to_eat = check_argv(argv[3]);
+	s_info->time_to_sleep = check_argv(argv[4]);
+	if (!s_info->num_of_philos || !s_info->time_to_die
+		|| !s_info->time_to_eat || !s_info->time_to_sleep)
 		return (-1);
 	if (argc == 6)
 	{
@@ -82,47 +37,62 @@ int	set_args(t_main *s_main, int argc, char *argv[])
 	return (0);
 }
 
-int	init_philos(t_main *s_main)
+int	init_philos(t_main *s_main, t_info *s_info)
 {
 	t_philo *s_philos;
 	int		i;
 
-	s_philos = malloc(sizeof(t_philo) * s_main->num_of_philos);
+	s_philos = malloc(sizeof(t_philo) * s_info->num_of_philos);
 	if (!(s_philos))
 		return (put_error("error: failed to allocate memory\n"));
 	i = 0;
-	while (i < s_main->num_of_philos)
+	while (i < s_info->num_of_philos)
 	{
 		s_philos[i].philo_num = i + 1;
 		s_philos[i].left_fork = i;
-		if (i == s_main->num_of_philos - 1)
+		if (i == s_info->num_of_philos - 1)
 			s_philos[i].right_fork = 0;
 		else
 			s_philos[i].right_fork = i + 1;
 		s_philos[i].eat_count = 0;
+		s_philos[i].s_info = s_info;
 		i++;
 	}
 	s_main->s_philos = s_philos;
 	return (0);
 }
 
-int	init_forks(t_main *s_main)
+int	init_forks(t_info *s_info)
 {
 	pthread_mutex_t *forks;
 	int				i;
 
-	forks = malloc(sizeof(pthread_mutex_t) * s_main->num_of_philos);
+	forks = malloc(sizeof(pthread_mutex_t) * s_info->num_of_philos);
 	if (!forks)
 		return (put_error("error: failed to allocate memory\n"));
 	i = 0;
-	while (i < s_main->num_of_philos)
+	while (i < s_info->num_of_philos)
 	{
 		if (pthread_mutex_init(&forks[i], NULL))
 			return (put_error("error: mutex is not initialized\n"));
 		i++;
 	}
-	s_main->forks = forks;
+	s_info->forks = forks;
 	return (0);
+}
+
+void	eating(t_philo	*philo)
+{
+	pthread_mutex_lock(&philo->s_info->forks[philo->left_fork]);
+	print_state(philo->s_info, philo->philo_num, "has taken a fork");
+	pthread_mutex_lock(&philo->s_info->forks[philo->right_fork]);
+	print_state(philo->s_info, philo->philo_num, "has taken a fork");
+	print_state(philo->s_info, philo->philo_num, "is eating");
+	usleep(philo->s_info->time_to_eat * 1000);
+	philo->time_last_meal = get_cur_time(philo->s_info->start_time);
+	philo->eat_count++;
+	pthread_mutex_unlock(&philo->s_info->forks[philo->left_fork]);
+	pthread_mutex_unlock(&philo->s_info->forks[philo->right_fork]);
 }
 
 void	*test_meal(void *s_philo)
@@ -130,76 +100,51 @@ void	*test_meal(void *s_philo)
 	t_philo	philo;
 	philo = *(t_philo *)s_philo;
 
-	// while (1 == 1)
-	// {
-	// 	print_state(s_philo, 0);
-	// 	usleep(800000);
-	// 	pthread_mutex_lock(&s_philo.left);
-	// 	print_state(s_philo, philo.philo_num);
-	// 	pthread_mutex_lock(&s_philo.right);
-	// 	print_state(s_philo, philo.philo_num);
-	// 	print_state(s_philo, philo.philo_num);
-	// 	usleep(200000);
-	// 	pthread_mutex_unlock(&s_philo.left);
-	// 	pthread_mutex_unlock(&s_philo.right);
-	// 	print_state(s_philo, philo.philo_num);
-	// 	usleep(200000);
-	// }
-	
+	while (1 == 1)
+	{
+		print_state(philo.s_info, philo.philo_num, "is thinking");
+		eating(&philo);
+		print_state(philo.s_info, philo.philo_num, "is sleeping");
+		usleep(philo.s_info->time_to_sleep * 1000);
+	}	
 }
 
-void	start_philos(t_main *s_main)
+int	start_philos(t_main *s_main, t_info *s_info)
 {
 	void	*s_philo;
 	int	i;
 
 	i = 0;
-	while (i < s_main->num_of_philos)
+	s_info->start_time = get_cur_time(0);
+	while (i < s_info->num_of_philos)
 	{
 		s_philo = (void *)(&s_main->s_philos[i]);
-		if (pthread_create(s_main->s_philos[i].philo, NULL, test_meal, s_philo))
+		if (pthread_create(&s_main->s_philos[i].philo, NULL, test_meal, s_philo))
 			return (put_error("error: failed to create thread\n"));
 		i++;
 	}
-	// i = 0;
-	// while (i < s_main->num_of_philos)
-	// {
-	// 	if (pthread_join(s_main->s_philos[i].philo, NULL))
-	// 		return (put_error("error: failed to create thread\n"));
-	// 	i++;
-	// }
+	i = 0;
+	while (i < s_info->num_of_philos)
+	{
+		if (pthread_join(s_main->s_philos[i].philo, NULL))
+			return (put_error("error: failed to create thread\n"));
+		i++;
+	}
 }
 
 int main(int argc, char *argv[])
 {
-	t_main	s_main;
 	int		status;
+	t_main	s_main;
+	t_info	s_info;
 
 	if (argc < 5 || argc > 6)
 		return (put_error("error: wrong number of arguments\n"));
-	if (set_args(&s_main, argc, argv) == -1)
+	if (set_args(&s_main, &s_info, argc, argv) == -1)
 		return (put_error("error: wrong argument values\n"));
 	// printf("%d %d %d %d %d\n", s_main.num_of_philos, s_main.time_to_die, s_main.time_to_eat, s_main.time_to_sleep, s_main.num_must_eat);
-	if (init_philos(&s_main) || init_forks(&s_main))
+	if (init_philos(&s_main, &s_info) || init_forks(&s_info))
 		return (1);
-	start_philos(&s_main);
-	// while (i < count)
-	// {
-	// 	init_philos(philos, i);
-	// 	i++;
-	// }
-	// t_philo s_philo1;
-	// t_philo s_philo2;
-	// pthread_t t1;
-	// pthread_t t2;
-
-	// s_philo1.number = 1;
-	// s_philo2.number = 2;
-	// pthread_mutex_init(&mutex1, NULL);
-	// pthread_mutex_init(&mutex2, NULL);
-	// pthread_create(&t1, NULL, test_philo, &s_philo1);
-	// pthread_create(&t1, NULL, test_philo, &s_philo2);
-	// pthread_join(t1, NULL);
-	// pthread_join(t2, NULL);
+	start_philos(&s_main, &s_info);
 	return (0);
 }
