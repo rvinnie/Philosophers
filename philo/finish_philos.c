@@ -15,7 +15,7 @@ int	check_eat_count(t_main *s_main, unsigned int num_of_philos)
 			return (0);
 		i++;
 	}
-	printf("ALL POKUSHALI\n");
+	exit(1);
 	return (1);
 }
 
@@ -40,7 +40,7 @@ void	check_death(t_main *s_main, t_info *s_info)
 		i++;
 	}
 	print_state(s_info, s_main->s_philos[i].philo_num, PHILO_DIE);
-	exit(0); // detach or clean here
+	// exit(0); // detach or clean here
 	// printf("%d - SDOOOOOOH!\n", s_main->s_philos[i].philo_num);
 	// printf("last_meal - %ld, cur_time - %ld\n", s_main->s_philos[i].time_last_meal, cur_time);
 }

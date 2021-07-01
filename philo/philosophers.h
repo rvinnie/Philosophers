@@ -7,11 +7,14 @@
 # include <sys/time.h>
 # include <pthread.h>
 
+// 4 800 200 200 3
+
 # define ERROR_ALLOCATE "failed to allocate memory"
 # define ERROR_MUTEX "mutex is not initialized"
 # define ERROR_NUM_ARGS "wrong number of arguments"
 # define ERROR_VAL_ARGS "wrong argument values"
 # define ERROR_THREAD "failed to create thread"
+# define ERROR_DETACH "failed to detach thread"
 # define PHILO_EAT "is eating"
 # define PHILO_SLEEP "is sleeping"
 # define PHILO_THINK "is thinking"
@@ -54,5 +57,7 @@ int		set_args(t_main *s_main, t_info *s_info, int argc, char *argv[]);
 int		init_philos(t_main *s_main, t_info *s_info);
 int		init_forks(t_info *s_info);
 void	check_death(t_main *s_main, t_info *s_info);
+int		start_philos(t_main *s_main, t_info *s_info);
+
 
 #endif
