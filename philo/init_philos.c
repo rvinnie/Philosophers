@@ -23,14 +23,15 @@ int	set_args(t_main *s_main, t_info *s_info, int argc, char *argv[])
 	s_info->time_to_live = check_argv(argv[2]);
 	s_info->time_to_eat = check_argv(argv[3]);
 	s_info->time_to_sleep = check_argv(argv[4]);
+	s_info->stop = 0;
 	if (!s_info->num_of_philos || !s_info->time_to_live
 		|| !s_info->time_to_eat || !s_info->time_to_sleep)
-		return (-1);
+		return (put_error(ERROR_VAL_ARGS));
 	if (argc == 6)
 	{
 		s_main->num_must_eat = check_argv(argv[5]);
 		if (!s_main->num_must_eat)
-			return (-1);
+			return (put_error(ERROR_VAL_ARGS));
 	}
 	else
 		s_main->num_must_eat = -1;
@@ -75,7 +76,10 @@ int	init_forks(t_info *s_info)
 	while (i < s_info->num_of_philos)
 	{
 		if (pthread_mutex_init(&forks[i], NULL))
+		{
+			free(forks);
 			return (put_error(ERROR_MUTEX));
+		}
 		i++;
 	}
 	s_info->forks = forks;

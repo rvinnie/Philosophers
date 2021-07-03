@@ -26,6 +26,7 @@ void	*start_meal(void *s_philo)
 		print_state(philo->s_info, philo->philo_num, PHILO_SLEEP);
 		usleep(philo->s_info->time_to_sleep * 1000);
 	}
+	return (NULL);
 }
 
 unsigned int	get_jump(unsigned int num_of_philos)
@@ -43,14 +44,20 @@ unsigned int	get_jump(unsigned int num_of_philos)
 
 int	detach_philos(t_main *s_main, t_info *s_info)
 {
+	unsigned int	jump;
 	unsigned int	i;
 
+	jump = get_jump(s_info->num_of_philos);
 	i = 0;
 	while (i < s_info->num_of_philos)
 	{
 		if (pthread_detach(s_main->s_philos[i].philo))
-			return (1);
-		i++;
+			return (put_error(ERROR_THREAD));
+		usleep(1000);
+		if (i == jump)
+			i = 1;
+		else
+			i += 2;
 	}
 	return (0);
 }

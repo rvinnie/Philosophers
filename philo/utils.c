@@ -29,5 +29,6 @@ void	print_state(t_info *s_info, unsigned int num, char *state)
 	long	start_time;
 
 	start_time = s_info->start_time;
-	printf("%-16ld %u %s\n", get_cur_time(start_time), num, state);
+	if (!s_info->stop)
+		printf("%-10ld %u %s\n", get_cur_time(start_time), num, state);
 }

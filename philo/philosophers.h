@@ -1,13 +1,12 @@
 #ifndef PHILOSOPHERS_H
 # define PHILOSOPHERS_H
+
 # include <unistd.h>
 # include <stdio.h>
 # include <stdlib.h>
 # include <string.h>
 # include <sys/time.h>
 # include <pthread.h>
-
-// 4 800 200 200 3
 
 # define ERROR_ALLOCATE "failed to allocate memory"
 # define ERROR_MUTEX "mutex is not initialized"
@@ -24,6 +23,7 @@
 typedef struct s_info
 {
 	long			start_time;
+	int				stop;
 	pthread_mutex_t	*forks;
 	unsigned int	num_of_philos;
 	unsigned int	time_to_live;
@@ -58,6 +58,6 @@ int		init_philos(t_main *s_main, t_info *s_info);
 int		init_forks(t_info *s_info);
 void	check_death(t_main *s_main, t_info *s_info);
 int		start_philos(t_main *s_main, t_info *s_info);
-
+void	clean_and_destroy(t_main *s_main, t_info *s_info);
 
 #endif
