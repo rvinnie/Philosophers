@@ -7,11 +7,13 @@
 # include <string.h>
 # include <sys/time.h>
 # include <pthread.h>
+# include <stdint.h>
 
 # define ERROR_ALLOCATE "failed to allocate memory"
 # define ERROR_MUTEX "mutex is not initialized"
 # define ERROR_NUM_ARGS "wrong number of arguments"
 # define ERROR_VAL_ARGS "wrong argument values"
+# define ERROR_TOO_LONG "too long argument"
 # define ERROR_THREAD "failed to create thread"
 # define ERROR_DETACH "failed to detach thread"
 # define PHILO_EAT "is eating"
@@ -23,8 +25,9 @@
 typedef struct s_info
 {
 	long			start_time;
-	int				stop;
 	pthread_mutex_t	*forks;
+	pthread_mutex_t	*lock;
+	int				*stop;
 	unsigned int	num_of_philos;
 	unsigned int	time_to_live;
 	unsigned int	time_to_eat;
@@ -50,6 +53,7 @@ typedef struct s_main
 
 int		ft_strlen(char *str);
 int		put_error(char *err);
+void	ft_usleep(size_t time);
 long	get_cur_time(long start_time);
 void	print_state(t_info *s_info, unsigned int num, char *state);
 int		check_argv(char *str_arg);

@@ -2,10 +2,15 @@
 
 int	main(int argc, char *argv[])
 {
-	int		state;
-	t_main	s_main;
-	t_info	s_info;
+	int				state;
+	int				stop;
+	t_main			s_main;
+	t_info			s_info;
+	pthread_mutex_t	lock;
 
+	s_info.lock = &lock;
+	s_info.stop = &stop;
+	pthread_mutex_init(s_info.lock, NULL);
 	if (argc < 5 || argc > 6)
 		return (put_error(ERROR_NUM_ARGS));
 	if (set_args(&s_main, &s_info, argc, argv))

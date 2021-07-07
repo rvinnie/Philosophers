@@ -18,7 +18,7 @@ $(NAME): $(OBJS)
 	$(CC) $(PTHREAD) $^ -o $@
 
 %.o: %.c
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -g -c $(CFLAGS) $< -o $@
 
 clean:
 	$(RM) $(OBJS)

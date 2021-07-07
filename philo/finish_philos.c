@@ -5,7 +5,6 @@ void	clean_and_destroy(t_main *s_main, t_info *s_info)
 	int	num_of_philos;
 	int	i;
 
-	s_info->stop = 1;
 	num_of_philos = (int)s_info->num_of_philos;
 	i = 0;
 	while (i < num_of_philos)
@@ -43,7 +42,10 @@ void	check_death(t_main *s_main, t_info *s_info)
 		if (s_main->num_must_eat != -1)
 		{
 			if (check_eat_count(s_main, s_info->num_of_philos) == 1)
+			{
+				*s_info->stop = 1;
 				return ;
+			}
 		}
 		if (i == s_info->num_of_philos)
 			i = 0;
@@ -53,5 +55,6 @@ void	check_death(t_main *s_main, t_info *s_info)
 			break ;
 		i++;
 	}
+	*s_info->stop = 1;
 	print_state(s_info, s_main->s_philos[i].philo_num, PHILO_DIE);
 }

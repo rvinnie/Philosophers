@@ -1,9 +1,14 @@
 #include "philosophers.h"
 
-void	eating(t_philo	*philo)
+int	eating(t_philo	*philo)
 {
 	pthread_mutex_lock(&philo->s_info->forks[philo->left_fork]);
 	print_state(philo->s_info, philo->philo_num, PHILO_FORK);
+	if (philo->s_info->num_of_philos == 1)
+	{
+		pthread_mutex_unlock(&philo->s_info->forks[philo->left_fork]);
+		return (1);
+	}
 	pthread_mutex_lock(&philo->s_info->forks[philo->right_fork]);
 	print_state(philo->s_info, philo->philo_num, PHILO_FORK);
 	print_state(philo->s_info, philo->philo_num, PHILO_EAT);
@@ -12,6 +17,7 @@ void	eating(t_philo	*philo)
 	philo->eat_count++;
 	pthread_mutex_unlock(&philo->s_info->forks[philo->left_fork]);
 	pthread_mutex_unlock(&philo->s_info->forks[philo->right_fork]);
+	return (0);
 }
 
 void	*start_meal(void *s_philo)
@@ -19,10 +25,13 @@ void	*start_meal(void *s_philo)
 	t_philo	*philo;
 
 	philo = (t_philo *)s_philo;
-	while (1 == 1)
+	if (philo->philo_num % 2 == 0)
+		usleep(philo->s_info->time_to_eat * 1000);
+	while (*philo->s_info->stop == 0)
 	{
 		print_state(philo->s_info, philo->philo_num, PHILO_THINK);
-		eating(philo);
+		if (eating((t_philo *)s_philo) == 1)
+			return (NULL);
 		print_state(philo->s_info, philo->philo_num, PHILO_SLEEP);
 		usleep(philo->s_info->time_to_sleep * 1000);
 	}
@@ -42,22 +51,16 @@ unsigned int	get_jump(unsigned int num_of_philos)
 	return (jump);
 }
 
-int	detach_philos(t_main *s_main, t_info *s_info)
+int	join_philos(t_main *s_main, t_info *s_info)
 {
-	unsigned int	jump;
 	unsigned int	i;
 
-	jump = get_jump(s_info->num_of_philos);
 	i = 0;
 	while (i < s_info->num_of_philos)
 	{
-		if (pthread_detach(s_main->s_philos[i].philo))
+		if (pthread_join(s_main->s_philos[i].philo, NULL))
 			return (put_error(ERROR_THREAD));
-		usleep(1000);
-		if (i == jump)
-			i = 1;
-		else
-			i += 2;
+		i++;
 	}
 	return (0);
 }
@@ -65,10 +68,8 @@ int	detach_philos(t_main *s_main, t_info *s_info)
 int	start_philos(t_main *s_main, t_info *s_info)
 {
 	void			*s_philo;
-	unsigned int	jump;
 	unsigned int	i;
 
-	jump = get_jump(s_info->num_of_philos);
 	s_info->start_time = get_cur_time(0);
 	i = 0;
 	while (i < s_info->num_of_philos)
@@ -77,14 +78,10 @@ int	start_philos(t_main *s_main, t_info *s_info)
 		if (pthread_create(&s_main->s_philos[i].philo,
 				NULL, start_meal, s_philo))
 			return (put_error(ERROR_THREAD));
-		usleep(1000);
-		if (i == jump)
-			i = 1;
-		else
-			i += 2;
+		i++;
 	}
-	if (detach_philos(s_main, s_info))
-		return (put_error(ERROR_DETACH));
 	check_death(s_main, s_info);
+	if (join_philos(s_main, s_info))
+		return (put_error(ERROR_DETACH));
 	return (0);
 }

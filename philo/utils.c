@@ -28,7 +28,9 @@ void	print_state(t_info *s_info, unsigned int num, char *state)
 {
 	long	start_time;
 
+	pthread_mutex_lock(s_info->lock);
 	start_time = s_info->start_time;
-	if (!s_info->stop)
-		printf("%-10ld %u %s\n", get_cur_time(start_time), num, state);
+	printf("%-10ld %u %s\n", get_cur_time(start_time), num, state);
+	pthread_mutex_unlock(s_info->lock);
+	return ;
 }

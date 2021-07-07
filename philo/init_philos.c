@@ -23,10 +23,12 @@ int	set_args(t_main *s_main, t_info *s_info, int argc, char *argv[])
 	s_info->time_to_live = check_argv(argv[2]);
 	s_info->time_to_eat = check_argv(argv[3]);
 	s_info->time_to_sleep = check_argv(argv[4]);
-	s_info->stop = 0;
+	*s_info->stop = 0;
 	if (!s_info->num_of_philos || !s_info->time_to_live
 		|| !s_info->time_to_eat || !s_info->time_to_sleep)
 		return (put_error(ERROR_VAL_ARGS));
+	if (s_info->num_of_philos > 300)
+		return (put_error(ERROR_TOO_LONG));
 	if (argc == 6)
 	{
 		s_main->num_must_eat = check_argv(argv[5]);
@@ -41,6 +43,7 @@ int	set_args(t_main *s_main, t_info *s_info, int argc, char *argv[])
 int	init_philos(t_main *s_main, t_info *s_info)
 {
 	t_philo			*s_philos;
+	pthread_mutex_t	eat_and_dead;
 	unsigned int	i;
 
 	s_philos = malloc(sizeof(t_philo) * s_info->num_of_philos);
@@ -49,6 +52,7 @@ int	init_philos(t_main *s_main, t_info *s_info)
 	i = 0;
 	while (i < s_info->num_of_philos)
 	{
+		pthread_mutex_init(&eat_and_dead, NULL);
 		s_philos[i].philo_num = i + 1;
 		s_philos[i].left_fork = i;
 		s_philos[i].time_last_meal = 0;
