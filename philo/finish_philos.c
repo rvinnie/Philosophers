@@ -11,6 +11,7 @@ void	clean_and_destroy(t_main *s_main, t_info *s_info)
 		pthread_mutex_destroy(&s_info->forks[i++]);
 	free(s_info->forks);
 	free(s_main->s_philos);
+	pthread_mutex_destroy(s_info->lock);
 }
 
 int	check_eat_count(t_main *s_main, unsigned int num_of_philos)
@@ -55,6 +56,6 @@ void	check_death(t_main *s_main, t_info *s_info)
 			break ;
 		i++;
 	}
-	*s_info->stop = 1;
 	print_state(s_info, s_main->s_philos[i].philo_num, PHILO_DIE);
+	*s_info->stop = 1;
 }

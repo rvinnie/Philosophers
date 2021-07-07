@@ -28,6 +28,8 @@ void	print_state(t_info *s_info, unsigned int num, char *state)
 {
 	long	start_time;
 
+	if (*s_info->stop)
+		return ;
 	pthread_mutex_lock(s_info->lock);
 	start_time = s_info->start_time;
 	printf("%-10ld %u %s\n", get_cur_time(start_time), num, state);

@@ -10,14 +10,14 @@ NAME = philo
 
 RM = rm -f
 
-SRCS := $(wildcard *.c)
+SRCS = philosophers.c init_philos.c start_philos.c finish_philos.c utils.c
 
 OBJS = $(SRCS:.c=.o)
 
 $(NAME): $(OBJS)
 	$(CC) $(PTHREAD) $^ -o $@
 
-%.o: %.c
+%.o: %.c $(HEADER)
 	$(CC) -g -c $(CFLAGS) $< -o $@
 
 clean:
